@@ -1,171 +1,382 @@
-//======================================================//
-// Dependências - Versão 1.0                            //
-//======================================================//
+#include<stdio.h>
+#include<stdlib.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+struct rb{
+	char cor;
+	int info;
+	struct rb *pai;
+	struct rb *esq;
+	struct rb *dir;
+};
 
-//======================================================//
-// Struct node - Versão 1.1                             //
-//======================================================//
+struct arvoreRB{
+	struct rb *raiz;
+};
 
-typedef struct node{
-    int prioridade;     // Prioridade em relação ao quão antigo o cliente é, quanto mais fiel, menor o número
-    struct node *esq;         // Ponteiro que aponta para o filho esquerdo
-    struct node *dir;         // Ponteiro que aponta para o filho direito
-    struct node *pai;         // Ponteiro que aponta para o pai
-    char cor;           // Variável que guarda a cor, escolhi char por ser menor que o int. p = preto | v = vermelho
+void preorder(struct rb *no){
+	if(no == NULL)
+		return;
 
-}node;
-
-//======================================================//
-// Funções Auxíliares - Versão 1.2                      //
-//======================================================//
-
-// Função que realiza a troca da cor do nó e de seus filhos
-void aux_swapCor(node* alvo){
-    if(alvo->cor == 'v'){           // Se for 'v', deve virar 'p'
-        alvo->cor = 'p';            // Se for 'p', deve virar 'v'
-    } else {
-        alvo->cor = 'v';
-    }
-
-    if(alvo->esq != NULL){
-        if(alvo->esq->cor = 'p'){
-            alvo->cor = 'p';
-        } else {
-            alvo->cor = 'v';
-        }
-    }
+	printf("%d ", no->info);
+	if(no->cor == 'p')
+		puts("BLACK");
+	else
+		puts("RED");
+	if(no->esq != NULL){
+		printf("esq = %d   ", no->esq->info);
+	}
+	
+	if(no->dir != NULL){
+		printf("dir = %d", no->dir->info);
+	}
+	puts("");
+	preorder(no->esq);
+	preorder(no->dir);
 }
 
-// Função que percorrer todos os nós em préordem
-void allNodes(node *raiz){ 
-    if(raiz != NULL){
-        allNodes(raiz->esq);
-        if (raiz->pai == NULL) {
-            printf("Found -> %d, pai = NULL\n", raiz->prioridade);
-        } else {
-            printf("Found -> %d, filho de -> %d\n", raiz->prioridade, raiz->pai->prioridade);
-        }
-        allNodes(raiz->dir);
-    }
+void teste(struct rb *no){
+	if(no == NULL)
+		return;
+
+	printf("%d, end: %p,	pai: %p		esq: %p		dir: %p		cor: ", no->info, no, no->pai, no->esq, no->dir);
+	if(no->cor == 'p')
+		puts("BLACK");
+	else
+		puts("RED");
+	teste(no->esq);
+	teste(no->dir);
 }
 
-//======================================================//
-// Funções de Manipulação - Versão 1.1                  // Corrigida
-//======================================================//
-
-// Função que cria o nó
-node *man_createNode(int valorPrioridade){
-    node * aux = (node *) malloc (sizeof(node));
-
-    aux->prioridade = valorPrioridade;
-    aux->esq = NULL;
-    aux->dir = NULL;
-    aux->pai = NULL;
-    aux->cor = 'r';
-
-    return aux;
+void LeftRotate(struct rb *x){
+	struct rb *aux;
+	aux = x->dir;
+	if(aux->esq != NULL){
+		aux->esq->pai = x;
+	}
+	x->dir = aux->esq;
+	aux->esq = x;
+	aux->pai = x->pai;
+	if(x->pai != NULL){
+		if(x->pai->esq == x){
+			x->pai->esq = aux;
+		}
+		else{
+			x->pai->dir = aux;
+		}
+	}
+	x->pai = aux;
+//	puts("Rodou");
 }
 
-// Função que insere o nó
-node *man_insert(node *raiz, int valorPrioridade){
-    
-    // Caso a arvore esteja vazia, inicia uma nova árvore.
-    if (raiz == NULL){
-        return man_createNode(valorPrioridade);
-    }
-
-    // Caso contrário, percorre a árvore para inserir o valor entregado.
-    if (valorPrioridade < raiz->prioridade){
-        raiz->esq = man_insert(raiz->esq, valorPrioridade);
-        raiz->esq->pai = raiz;                                  // Define o pai do novo filho como o alvo atual
-                                                                // Como o novo filho é esquerdo, usamos ele como referencia
-    } else if (valorPrioridade > raiz->prioridade){
-        raiz->dir = man_insert(raiz->dir, valorPrioridade);
-        raiz->dir->pai = raiz;                                  // Define o pai do novo filho como o alvo atual
-    }                                                           // Como o novo filho é direito, usamos ele como referencia
-
-    return raiz;
+void RightRotate(struct rb *x){
+	struct rb *aux;
+	aux = x->esq;
+	if(aux->dir != NULL){
+		aux->dir->pai = x;
+	}
+	x->esq = aux->dir;
+	aux->dir = x;
+	aux->pai = x->pai;
+	if(x->pai != NULL){
+		if(x->pai->esq == x){
+			x->pai->esq = aux;
+		}
+		else{
+			x->pai->dir = aux;
+		}
+	}
+	x->pai = aux;
+//	puts("Rodou");
 }
 
-//void man_rbFix(node *alvo, )
-
-//======================================================//
-// Funções de Rotação - Versão 1.0                      //
-//======================================================//
-
-// Função de rotação para a esquerda
-void rot_esq(node* alvo, node *raiz)
-{
-    node *aux = alvo->dir;
-    alvo->dir = aux->esq;
-
-    if (aux->esq != NULL){
-        aux->esq->pai = alvo;
-    }
-
-    aux->pai = alvo->pai;
-
-    if (alvo->pai == NULL){
-        raiz = aux;
-    } else if (alvo == alvo->pai->esq){
-        alvo->pai->esq = aux;
-    } else {
-        alvo->pai->dir = aux;
-    }
-
-    aux->esq = alvo;
-    alvo->pai = aux;
-    return;
+void ajuste(struct arvoreRB *arvore, struct rb *no){
+	while(no->pai != NULL && no->pai->cor == 'v'){ //se o pai é preto, não precisa fazer nada
+		if(no->pai == no->pai->pai->esq){//está na subarvore esquerda
+			struct rb *tio = no->pai->pai->dir;
+			if(tio != NULL && tio->cor == 'v'){ //pai vermelho e tio vermelho
+				no->pai->cor = 'p';
+				tio->cor = 'p';
+				no->pai->pai->cor = 'v';
+				no = no->pai->pai; //nó recebeu endereço do avô
+			}
+			else{ //pai vermelho e tio preto ou null (cor e rotações)
+				if (no == no->pai->dir){
+					no = no->pai;
+					LeftRotate(no);
+				}
+				no->pai->cor = 'p';
+				if(no->pai->pai != NULL){
+					no->pai->pai->cor = 'v';
+					RightRotate(no->pai->pai);
+				}	
+			}
+		}
+		else{ //está na subarvore direita
+			//puts("subarvore direita");
+			struct rb *tio = no->pai->pai->esq;
+			if(tio != NULL && tio->cor == 'v'){ //pai vermelho e tio vermelho
+				//puts("tio vermelho incio");
+				no->pai->cor = 'p';
+				tio->cor = 'p';
+				no->pai->pai->cor = 'v';
+				no = no->pai->pai;
+				//puts("tio vermelho fim");
+			}
+			else{ //pai vermelho e tio preto ou null (rotações e alteração de cores)
+				if(no == no->pai->esq){
+					no = no->pai;
+					RightRotate(no);
+				}
+				no->pai->cor = 'p';
+				if(no->pai->pai !=NULL){
+					no->pai->pai->cor = 'v';
+					LeftRotate(no->pai->pai);
+				}
+			}
+		}
+	}
+	if(no->pai == NULL)
+		arvore->raiz = no;
+	else if(no->pai->pai == NULL)
+		arvore->raiz = no->pai;
+	arvore->raiz->cor = 'p';
 }
 
-// Função de rotação para a direita
-void rot_dir(node* alvo, node *raiz)
-{
-    node *aux = alvo->esq;
-    alvo->esq = aux->dir;
+void inserir(struct arvoreRB *arvore, int k){
+	struct rb *y = NULL;
+	struct rb *x = arvore->raiz;
+	while (x != NULL){
+		y = x;
+		if (k < x->info)
+			x = x->esq;
+		else
+			x = x->dir;
+	}
+	struct rb *no = malloc(sizeof(struct rb));
+	no->info = k;
+	no->pai = y;
 
-    if (aux->dir != NULL){
-        aux->dir->pai = alvo;
-    }
+	if(y == NULL){
+		arvore->raiz = no;
+		arvore->raiz->cor = 'p';
+		arvore->raiz->esq = NULL;
+		arvore->raiz->dir = NULL;
+		arvore->raiz->pai = NULL;
+		return;
+	}
+	else if (no->info < y->info){
+		y->esq = no;
+	}
+	else{
+		y->dir = no;
+	}
 
-    aux->pai = alvo->pai;
+	no->esq = NULL;
+	no->dir = NULL;
+	no->cor = 'v';
+//	printf("%d, end: %p,	pai: %p		esq: %p		dir: %p\n", no->info, no, no->pai, no->esq, no->dir);
+//	printf("pai->%d, end: %p,	pai: %p		esq: %p		dir: %p\n", no->pai->info, no->pai, no->pai->pai, no->pai->esq, no->pai->dir);
+	ajuste(arvore, no);
 
-    if (!alvo->pai){
-        raiz = aux;
-    } else if (alvo == alvo->pai->dir){
-        alvo->pai->esq = aux;
-    } else {
-        alvo->pai->dir = aux;
-    }
-
-    aux->dir = alvo;
-    alvo->pai = aux;
-    return;
 }
 
-//======================================================//
-// Funções Main - Versão 1.0                            //
-//======================================================//
+struct rb *busca_no(struct arvoreRB *arvore, int k){
+	struct rb *aux = arvore->raiz;
+	while(aux != NULL){
+		if(k < aux->info){
+			aux = aux->esq;
+		}
+		else{
+			if(k == aux->info){
+				break;
+			}
+			aux = aux->dir;
+		}
+	}
+	return aux;
+}
 
-int main (){
-    printf("Fine!\n");
+void remover(struct arvoreRB *arvore){
+	struct rb *no = arvore->raiz;
+	struct rb *aux;
+	int verificar = 1;
+	if(no == NULL){
+		return;
+	}
+	while(no->esq != NULL){
+		no = no->esq;
+	}
+	printf("%d\n", no->info);
 
-    // cria raiz
-    node* raiz = NULL;
-    raiz = man_insert(raiz, 50);
-    man_insert(raiz, 30);
-    man_insert(raiz, 20);
-    man_insert(raiz, 40);
-    man_insert(raiz, 70);
-    man_insert(raiz, 60);
-    man_insert(raiz, 80);
- 
-    // print inoder traversal of the BST
-    allNodes(raiz);
+	if(no->dir == NULL && no->pai == NULL){ //caso só exista a raiz
+		free(no);
+		arvore->raiz = NULL;
+		return;
+	}
+	else if (no->dir != NULL && no->pai == NULL){ //caso só exista a raiz com filho direito
+		arvore->raiz = no->dir;
+		no->dir->pai = NULL;
+		no->dir->cor = 'p';
+		free(no);
+		return;
+	}
+
+	if(no->pai != NULL)
+		no->pai->esq = NULL;
+	aux = no;
 
 
-    return 0;
+	//puts("ta nos ifs");
+	if(no->cor == 'v'){ //se o nó for vermelho, não altera o balanceamento da árvore
+		puts("caso 1");
+		aux = no->pai;
+		free(no);
+		no = aux;
+		verificar = 0;
+		return;
+	}
+	else if(no->dir != NULL){ //caso o no tenha um filho da direita
+		puts("caso 2");
+		no->pai->esq = no->dir;
+		no->dir->pai = no->pai;
+		if(no->dir->cor == 'v'){
+			no->dir->cor = 'p';
+		}
+		else{
+			no->dir->cor = 'v';
+		}
+		no = no->pai;
+		verificar = 0;
+	}
+	while(verificar == 1 && no->pai != NULL){
+		if(no->pai->dir != NULL && no->pai->dir->cor == 'v'){ //irmao vermelho
+			puts("caso 3.1");
+			no->pai->dir->cor = 'p';
+			no->pai->cor = 'v';
+			LeftRotate(no->pai);
+		}
+		else if(no->pai->dir->dir != NULL && no->pai->dir->dir->cor == 'v'){ //caso o irmao tenha filho direito vermelho
+			puts("caso 3.4");
+			no = no->pai;
+			char cor_aux;
+			cor_aux = no->cor;
+			no->cor = 'p';
+			no->dir->dir->cor = 'p';
+			no->dir->cor = cor_aux;
+			LeftRotate(no);
+			verificar = 0;
+		}
+		else if(no->pai->dir->esq != NULL && no->pai->dir->esq->cor == 'v'){ //caso o irmao tenha filho esquerdo vermelho
+			puts("caso 3.3");
+			aux = no;
+			no = no->pai;
+			char cor_aux = no->dir->cor;
+			RightRotate(no->dir);
+			no->dir->dir->cor = no->dir->cor;
+			no->dir->cor = cor_aux;
+			cor_aux = no->cor;
+			no->cor = no->dir->cor;
+			no->dir->dir->cor = no->dir->cor;
+			no->dir->cor = cor_aux;
+			LeftRotate(no);
+			no = no->pai;
+			verificar = 0;
+		}
+		else if((no->pai->esq == NULL || no->pai->esq->cor == 'p') && (no->pai->dir == NULL || no->pai->dir->cor == 'p')){ //irmao com dois filhos 'p' ou NULL
+			puts("caso 3.2");
+			no = no->pai;
+			char cor_aux = no->cor;
+			no->cor = 'p';
+			no->dir->cor = 'v';
+			if(cor_aux == 'v'){
+				verificar = 0;
+			}
+		}
+	}
+	free(aux);
+	//printf("no: %d, pai: %d\n", no->info, no->pai->info);
+
+	if(no->pai == NULL){
+		arvore->raiz = no;
+		arvore->raiz->cor = 'p';
+		return;
+	}
+	else if(no->pai->pai == NULL){
+		arvore->raiz = no->pai;
+		arvore->raiz->cor = 'p';
+		//printf("raiz: %d\n", no->pai->info);
+	}
+	else if(no->pai->pai->pai == NULL){
+		arvore->raiz = no->pai->pai;
+		arvore->raiz->cor = 'p';
+		// printf("raiz: %d\n", no->pai->info);
+	}
+	else if (no->pai->pai->pai->pai == NULL){
+		arvore->raiz = no->pai->pai->pai;
+		arvore->raiz->cor = 'p';
+		// printf("raiz: %d\n", no->pai->info);
+	}
+	arvore->raiz->cor = 'p';
+	printf("raiz = %d\n", arvore->raiz->info);
+}
+
+void desalocar(struct rb *no){
+	if(no == NULL)
+		return;
+
+	desalocar(no->esq);
+	desalocar(no->dir);
+	free(no);
+}
+
+int main(){
+	//inicializando a arvore RN
+	struct arvoreRB arvore;
+	arvore.raiz = NULL;
+	int k;
+
+//	Lendo os dados da entrada:
+	while (scanf(" %d", &k) != EOF) {
+		inserir(&arvore, k);
+	}
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	remover(&arvore);
+	// remover(&arvore);
+	// remover(&arvore);
+	// remover(&arvore);
+	// remover(&arvore);
+	// remover(&arvore);
+	// remover(&arvore);
+	// remover(&arvore);
+
+	// inserir(&arvore, 30);
+	// remover(&arvore);
+	// inserir(&arvore, 41);
+	// inserir(&arvore, 17);
+	// inserir(&arvore, 34);
+	// inserir(&arvore, 43);
+	// remover(&arvore);
+	// inserir(&arvore, 24);
+	// inserir(&arvore, 25);
+	// inserir(&arvore, 49);
+	// inserir(&arvore, 32);
+	// inserir(&arvore, 36);
+	// remover(&arvore);
+	puts("-/-/-/PREORDEM:-/-/-/");
+	preorder(arvore.raiz);
+	desalocar(arvore.raiz);
+
+	return 0;
 }
